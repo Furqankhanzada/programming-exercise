@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backbone exercise</title>
+    <meta charset="utf-8">
+    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/mustache.js/0.8.1/mustache.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
+    <style>
+        .mrg-tp-7{
+            margin-top: 7px;
+        }
+        .pd-10{
+            padding: 10px;
+        }
+        .align-center{
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<!--App View-->
+<div id="container"></div>
+
+<!--templates-->
+<script id="presentationTemplate" type="x-tmpl-mustache">
+    <div class="col-xs-10">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-4">
+                        <strong>
+                            <a href="javascript:;">
+                                <span class="glyphicon glyphicon-chevron-left"></span>
+                                All Saved Question
+                            </a>
+                        </strong>
+                    </div>
+                    <div class="col-xs-4 align-center">
+                        <strong>Task1 Completion</strong>
+                    </div>
+                    <div class="col-xs-4">
+                        <div class="pull-right">
+                            <button type="submit" class="btn btn-xs btn-default">Add to Excel</button>
+                            <button type="submit" id="edit" class="btn btn-xs btn-default">Edit</button>
+                            <button type="submit" class="btn btn-xs btn-default">Unsave</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-body">
+                <form class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label class="col-xs-2 control-label">Name</label>
+                        <div class="col-xs-8 mrg-tp-7">
+                            <span>{{name}}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-xs-2 control-label">prompt</label>
+                        <div class="col-xs-8 mrg-tp-7">
+                            <span>{{prompt}}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-xs-2 control-label">Source</label>
+                        <div class="col-xs-8 mrg-tp-7">
+                            <span>{{source}}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-xs-2 control-label">Type</label>
+                        <div class="col-xs-8 mrg-tp-7">
+                            <span>{{type_id}}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-xs-2 control-label">Number of Responses</label>
+                        <div class="col-xs-8 mrg-tp-7">
+                            <span>{{num_responses}}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-xs-2 control-label">Sample size</label>
+                        <div class="col-xs-8 mrg-tp-7">
+                            <span>{{sample_size_method}}</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</script>
+<script id="editTemplate" type="x-tmpl-mustache">
+    <div class="col-xs-10">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-4 mrg-tp-7">
+                         <strong>
+                             <a href="javascript:;">
+                                 <span class="glyphicon glyphicon-chevron-left"></span>
+                                 All Saved Question
+                             </a>
+                         </strong>
+                    </div>
+                    <div class="col-xs-4 align-center mrg-tp-7">
+                       <strong>Task1 Completion</strong>
+                    </div>
+                    <div class="col-xs-4">
+                        <div class="pull-right">
+                            <a href="javascript:;" class="btn btn-link" id="cancel" >Cancel</a>
+                            <button type="button" id="save" class="btn btn-primary btn-sm">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-body">
+                <form class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label for="name" class="col-xs-2 control-label">Name</label>
+                        <div class="col-xs-8">
+                            <input type="text" class="form-control" id="name" placeholder="Example question" value="{{name}}"/>
+                            <p class="help-block">120 Characters or less</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="prompt" class="col-xs-2 control-label">prompt</label>
+                        <div class="col-xs-8">
+                            <textarea class="form-control" id="prompt"
+                                      placeholder="How would you categorize this question?">{{prompt}}</textarea>
+                            <p class="help-block">1,020 Characters or less</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="source" class="col-xs-2 control-label">Source</label>
+                        <div class="col-xs-8 mrg-tp-7">
+                            <span id="source">{{source}}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="type_id" class="col-xs-2 control-label">Type</label>
+                        <div class="col-xs-2">
+                            <select class="form-control" data-type="select" id="type_id">
+                                <option value="1">Categorical</option>
+                                <option value="2">Rating Scale</option>
+                                <option value="3">Time</option>
+                                <option value="4">Open Ended</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="num_responses" class="col-xs-2 control-label">Number of Responses</label>
+                        <div class="col-xs-8 mrg-tp-7">
+                            <span id="num_responses">{{num_responses}}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-xs-2 control-label">Sample size</label>
+                        <div class="col-xs-8">
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default">
+                                    <input type="radio" name="sample_size_method" value="participants"/>
+                                    Participants
+                                </label>
+                                <label class="btn btn-default">
+                                    <input type="radio" name="sample_size_method" checked value="responses"/>
+                                    Responses
+                                </label>
+                                <label class="btn btn-default">
+                                    <input type="radio" name="sample_size_method" value="presentations"/>
+                                    Presentations
+                                </label>
+                            </div>
+                            <p class="help-block">
+                            <ul>
+                                <li>Total number of unique participants in the study</li>
+                                <li>Total number of responses to this question</li>
+                                <li>Number of unique participants who gave a response (even empty)</li>
+                            </ul>
+                            </p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</script>
+
+<!--main file-->
+<script src="./exercise.js"></script>
+</body>
+</html>
