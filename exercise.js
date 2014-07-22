@@ -37,8 +37,12 @@ var ExerciseModel = Backbone.Model.extend({});
 // adding methods and properties, etc.
 var ExerciseView = Backbone.View.extend({
 	tagName: 'div',
+    presentationTemplate: $('#presentationTemplate').html(),
+    editTemplate: $('#editTemplate').html(),
     initialize: function(){
-
+        //pre-compiling the templates
+        Mustache.parse(this.presentationTemplate);
+        Mustache.parse(this.editTemplate);
     },
     events:{
         'click #edit' : 'loadEditTemplate',
@@ -50,10 +54,54 @@ var ExerciseView = Backbone.View.extend({
 		return this;
 	},
     loadPresentationTemplate:function(){
-        this.$el.html(Mustache.render($('#presentationTemplate').html(), this.model.toJSON()));
+        var model = this.model.toJSON();
+        model.type_id = this.convertTypeId(model);
+        model.sample_size_method = this.convertSampleSizeMethod(model);
+
+        var template = Mustache.render(this.presentationTemplate, model);
+        this.$el.html(template);
+    },
+    //converts type_id numeric values into corresponding String values
+    convertTypeId:function(model){
+        var type;
+
+        switch(model.type_id + ''){
+            case '1':
+                type = 'Categorical';
+                break;
+            case '2':
+                type = 'Rating Scale';
+                break;
+            case '3':
+                type = 'Time';
+                break;
+            case '4':
+                type = 'Open Ended';
+                break;
+        }
+
+        return type;
+    },
+    //converts sample_size_method sting values into corresponding numeric values
+    convertSampleSizeMethod:function(model){
+        var sampleValue;
+
+        switch(model.sample_size_method){
+            case 'presentations':
+                sampleValue = model.num_presentations;
+                break;
+            case 'participants':
+                sampleValue = model.num_participants;
+                break;
+            case 'responses':
+                sampleValue = model.num_responses;
+                break;
+        }
+
+        return sampleValue;
     },
     loadEditTemplate:function(){
-        this.$el.html( Mustache.render($('#editTemplate').html(), this.model.toJSON()));
+        this.$el.html( Mustache.render(this.editTemplate, this.model.toJSON()));
         this.$('#type_id').val( this.model.get('type_id') );
         this.$('[name="sample_size_method"]').parent('label').removeClass('active');
         this.$('[name="sample_size_method"][value="'+ this.model.get('sample_size_method') +'"]')
@@ -66,9 +114,6 @@ var ExerciseView = Backbone.View.extend({
             prompt             : this.$('#prompt').val(),
             source             : 'uz',
             type_id            : this.$('#type_id').val(),
-            num_responses      : 36,
-            num_participants   : 98,
-            num_presentations  : 36,
             sample_size_method : this.$('[name="sample_size_method"]:checked').val()
         };
 
